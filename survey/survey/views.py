@@ -1,8 +1,9 @@
+import os
 import re
 
 from django.forms import model_to_dict
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import json
 import base64
 import smtplib
@@ -84,6 +85,22 @@ def erro(request):
 def index(request):
     return render(request, "login.html")
 
+def adminaddSuccess(request):
+    user = User.objects.filter(id=str(request.POST.get("username")).split('-')[0])
+    paper_obj = Paper(name=request.POST.get('paperName'),
+                      detail=request.POST.get('paperDetail'), uid=user[0], verify='未发布')
+    paper_obj.save()
+    for i in json.loads(request.POST.get('questions')):
+        question_obj = Question(no=i['no'], content=i['questionName'], type=i['type'], ismustfill=i['ismustfill'],
+                                pid=paper_obj)
+        question_obj.save()
+        count = 1
+        for k in i['option']:
+            option_obj = Option(no=count, content=k, qid=question_obj)
+            count += 1
+            option_obj.save()
+    os.remove('proxy/'+request.POST.get("username"))
+    return JsonResponse({'resultCode': 0})
 
 def addSuccess(request):
     if not request.session.get("userID"):
@@ -197,12 +214,21 @@ def loginAction(request):
     if len(user) == 0:
         return JsonResponse({'resultCode': 1})
     request.session['userID'] = user[0].id
+    request.session['userName']=user[0].name
     print(user[0])
     return JsonResponse({'resultCode': 0})
 
+def adminAddView(request):
+    username=request.GET['username']
+    return render(request,'adminadd.html',{'username':username})
 
 @loginCheck
 def userView(request):
+    if request.session.get("userName") == 'admin':
+        adict={}
+        for i,j,k in os.walk("proxy"):
+            adict['names']=k
+        return render(request, "admin.html",adict)
     Paperobj = Paper.objects.filter(uid=request.session.get("userID"))
     rsa = []
     f = open('second_public_key.txt', 'r', encoding='utf-8')
@@ -425,6 +451,13 @@ def getSummaryFunction(id):
                 adict['length'] = 0
         summary.append(adict)
     return {"answer": summary}
+
+def upload(request):
+    file=request.FILES.get('file')
+    with open('proxy/'+str(request.session.get('userID'))+"-"+urlGenerator()+"."+str(file.name).split('.')[1],'wb') as f:
+        for i in file.readlines():
+            f.write(i)
+    return redirect("/user/")
 
 
 

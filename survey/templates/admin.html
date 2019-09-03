@@ -49,129 +49,35 @@
 
 <body id="body" style="display: none">
 <div id="top">
-    <div class="container-fluid">
-        <div class="row">
-            <button class="btn btn-outline-danger col-2 col-md-1" onclick="location.href='/'">
-                退出
-            </button>
-            <input type="text" class="form-control col-6 col-md-9" placeholder="搜索问卷"/>
-            <button class="btn btn-outline-success col-2 col-md-1" onclick="add()">
-                新建
-            </button>
-            <button class="btn btn-outline-success col-2 col-md-1" onclick="proxy()">
-                委托制作
-            </button>
-
-        </div>
-    </div>
-
 
 </div>
 
 
 <div class="container-fluid" id="container">
-    {% if papers.0 == None %}
-        <div>
-            <div style="padding-top: 15%" align="center">
-                <img src="{% static 'sb/empty.png' %}"><br/>空空如也~
-            </div>
-        </div>
-    {% endif %}
 
     <div class="row">
-        {% for i,j,k,l,m,n,o,p in papers reversed %}
-            <div class="card bg-light col-md-6" style="margin-bottom: 10px; box-shadow: lightgray 0px 3px 5px 0px ;">
-                <div class="card-body">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-9"
-                                 style="border:2px solid #ccc; border-top:none;border-bottom:none;border-left:none; ">
-                                <h5>{{ i.name }}</h5>
-                                {% if i.verify == '未发布' %}
-                                    <h6 style="color: lightgrey">
-                                        <text>•</text>
-                                        <text>{{ i.verify }}</text>
-                                    </h6>
-                                {% else %}
-                                    <h6>
-                                        <text>•</text>
-                                        <text>{{ i.verify }}</text>
-                                        {% if i.verify == '已发布' %}
-                                            <text>,有效期至{{ i.timelimit.endtime|date:"Y-m-d H:i:s" }}</text>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>委托文件</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for n in names %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ n }}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="window.location.href='/downware?username={{ n }}'">下载</button>
+                        <button class="btn btn-primary" onclick="window.location.href = '/adminadd?username={{ n }}'">制作</button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
 
-                                        {% endif %}
-                                    </h6>
-                                {% endif %}
-                            </div>
-                            <div class="col-3" style="text-align: center;">
-
-                                <h3>{{ o }}</h3>
-                                <h6 style="font-size:15px;">答卷人数</h6>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer" style="background: #F8F9FA;">
-                    <div class="btn-group btn-group-sm">
-                        {% if i.verify == '未发布' %}
-                            <button type="button" class="btn btn-outline-primary" onclick="release('{{ j }}')">发布
-                            </button>
-                            <button type="button" class="btn btn-outline-primary"
-                                    onclick="location.href='/modify/{{ k }}'">编辑
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">分享</button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">统计</button>
-                            <button type="button" class="btn btn-outline-danger" disabled="disabled">停止</button>
-                        {% elif i.verify == '已发布' %}
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">发布</button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">编辑</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="share('{{ i.url }}')">分享
-                            </button>
-                            <button type="button" class="btn btn-outline-primary"
-                                    onclick="location.href='/summary/{{ m }}'">统计
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="stopPaper('{{ p }}')">停止
-                            </button>
-                        {% elif i.verify == 'AI审核中' %}
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">发布</button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">编辑</button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">分享
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">统计</button>
-                            <button type="button" class="btn btn-outline-danger" disabled="disabled">停止</button>
-                        {% elif i.verify == '已停止' %}
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">发布</button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">编辑</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="share('{{ i.url }}')">分享
-                            </button>
-                            <button type="button" class="btn btn-outline-primary"
-                                    onclick="location.href='/summary/{{ m }}'">统计
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" disabled="disabled">停止</button>
-                        {% else %}
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">发布</button>
-                            <button type="button" class="btn btn-outline-primary"
-                                    onclick="location.href='/modify/{{ k }}'">编辑
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">分享
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" disabled="disabled">统计</button>
-                            <button type="button" class="btn btn-outline-danger" disabled="disabled">停止</button>
-
-                        {% endif %}
-                    </div>
-                    {#                {% if i.verify != 'AI审核中' %}#}
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePaper('{{ n }}')"
-                            style="float: right;">删除
-                    </button>
-                    {#                    {% else %}#}
-                    {#                    <button type="button" class="btn btn-outline-danger btn-sm" disabled="disabled"#}
-                    {#                            style="float: right;">删除#}
-                    {#                    </button>#}
-                    {#                {% endif %}#}
-                </div>
-            </div>
-        {% endfor %}
+        </table>
     </div>
 
 
@@ -285,7 +191,7 @@
     }
 
     function proxyAlipay() {
-        if ($("#dd").val() == '2019090337454497310615248245724924') {
+        if ($("#dd").val() == '123') {
             alert("充值成功!请提交文件,制作完成后将通过邮件通知,请留意邮箱!")
             $('#proxybutton').attr("disabled", false)
         } else {
