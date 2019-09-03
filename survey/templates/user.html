@@ -82,6 +82,10 @@
                                     <h6>
                                         <text>•</text>
                                         <text>{{ i.verify }}</text>
+                                    {% if i.verify == '已发布' %}
+                                                   <text>,有效期至{{ i.timelimit.endtime|date:"Y-m-d H:i:s" }}</text>
+
+                                        {% endif %}
                                     </h6>
                                 {% endif %}
                             </div>
@@ -96,7 +100,7 @@
                 <div class="card-footer" style="background: #F8F9FA;">
                     <div class="btn-group btn-group-sm">
                         {% if i.verify == '未发布' %}
-                            <button type="button" class="btn btn-outline-primary" onclick="releasePaper('{{ j }}')">发布
+                            <button type="button" class="btn btn-outline-primary" onclick="release('{{ j }}')">发布
                             </button>
                             <button type="button" class="btn btn-outline-primary"
                                     onclick="location.href='/modify/{{ k }}'">编辑
@@ -220,13 +224,32 @@
         });
     }
 
+    {#function releasePaper(id) {#}
+    {##}
+    {#    $.ajax({#}
+    {#        url: '/releasePaper/',#}
+    {#        type: 'post',#}
+    {#        dataType: 'json',#}
+    {#        traditional: true,//这个参数必须添加，采用传统方式转换#}
+    {#        data: {raw: id},#}
+    {#        success: function (result) {#}
+    {#            if (result.resultCode == 0) {#}
+    {#                alert("发布成功")#}
+    {#                window.location.href = "/user/"#}
+    {#            } else {#}
+    {#                alert("失败")#}
+    {#            }#}
+    {#        }#}
+    {#    });#}
+    {#}#}
     function releasePaper(id) {
+        var day=$("#day").val()
         $.ajax({
             url: '/releasePaper/',
             type: 'post',
             dataType: 'json',
             traditional: true,//这个参数必须添加，采用传统方式转换
-            data: {raw: id},
+            data: {raw: id,day:day},
             success: function (result) {
                 if (result.resultCode == 0) {
                     alert("发布成功")
@@ -244,6 +267,10 @@
         $("#myModal").modal("show")
     }
 
+    function release(url) {
+        $("#releasebtn").attr('onclick', "releasePaper('"+url+"')")
+        $("#releaseModal").modal("show")
+    }
 
 </script>
 
@@ -265,12 +292,42 @@
                 <div class="container-fluid">
                     <div class="row">
                         <input id="url" type="text" class="form-control col-10" value="" readonly="true"/>
-
                             <button id="btn" class="btn btn-outline-primary col-2" data-clipboard-text="sb110">复制</button>
-
                     </div>
                 </div>
                 <div id="show" style="display: none;color: dodgerblue;">已复制</div>
+            </div>
+
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary col-2" data-dismiss="modal">关闭</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- 模态框 -->
+<div class="modal fade" id="releaseModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">发布问卷</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                请输入您的问卷有效持续时间
+                <div class="container-fluid">
+                    <div class="row">
+                        <input id="day" type="text" class="form-control col-10" value=""/>
+                            <button id="releasebtn" class="btn btn-outline-primary col-2" onclick="releasePaper()">确认</button>
+                    </div>
+                </div>
             </div>
 
             <!-- 模态框底部 -->

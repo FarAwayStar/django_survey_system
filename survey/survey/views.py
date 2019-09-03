@@ -1,3 +1,5 @@
+import re
+
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -323,11 +325,12 @@ def releasePaperAction(request):
     f.close()
     try:
         m = request.POST.get('raw')
+        day=str(request.POST.get('day'))
         adict = rsaDecrypt(m, secondPrivateKey)
         if not adict['whoisyourdaddy'] == 'sb110':
             return JsonResponse({'resultCode': 1})
         if adict['userId'] == request.session.get("userID"):
-            releasePaperFunction(adict['paperId'])
+            releasePaperFunction(adict['paperId'],day)
             return JsonResponse({'resultCode': 0})
         return JsonResponse({'resultCode': 1})
     except Exception as err:
@@ -335,10 +338,22 @@ def releasePaperAction(request):
         return JsonResponse({'resultCode': 1})
 
 
-def releasePaperFunction(paperId):
+def releasePaperFunction(paperId,day):
+    words=['天','时','分','秒']
+    muty=[86400,3600,60,1]
+    sec=0
+    for i in range(len(words)):
+        try:
+            a=re.search('(\d+)'+words[i],day).group(1);
+            sec+=muty[i]*int(a)
+        except:
+            pass
+    Time_obj=Limittime(starttime=time.strftime('%Y-%m-%d %H:%M:%S'),endtime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()+sec)))
+    Time_obj.save()
     Paper_obj = Paper.objects.get(id=paperId)
     Paper_obj.verify = '已发布'
     Paper_obj.url = urlGenerator()
+    Paper_obj.timelimit=Time_obj
     Paper_obj.save()
 
 
