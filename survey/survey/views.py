@@ -101,7 +101,9 @@ def adminaddSuccess(request):
             option_obj = Option(no=count, content=k, qid=question_obj)
             count += 1
             option_obj.save()
+    proxyemail(user[0].email)
     os.remove('proxy/'+request.POST.get("username"))
+
     return JsonResponse({'resultCode': 0})
 
 def addSuccess(request):
@@ -468,3 +470,20 @@ def downware(request):
     response['Content-Disposition']="attachment;filename*=utf-8''{}".format(escape_uri_path(request.GET['username']))
     return response
 
+def proxyemail(email):
+    ret = True
+    try:
+        content = '\
+                <h2>您的委托问卷已完成,请登录后台查看</h2>\
+                <h2>如果这并不是你本人操作, 请忽略这封邮件</h2>'
+        msg = MIMEText(content, 'html', 'utf-8')
+        msg['From'] = "SB110Rigiseter <5724924@qq.com>"  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+        msg['To'] = formataddr(["FK", email])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+        msg['Subject'] = "您的委托问卷已经完成"  # 邮件的主题，也可以说是标题
+        server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
+        server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
+        server.sendmail(my_sender, [email, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
+        server.quit()  # 关闭连接
+    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        ret = False
+    return ret
