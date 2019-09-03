@@ -2,7 +2,7 @@ import os
 import re
 
 from django.forms import model_to_dict
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 import json
 import base64
@@ -15,6 +15,8 @@ from email.utils import formataddr
 
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_pkcs1_v1_5
 from Crypto.PublicKey import RSA
+from django.utils.encoding import escape_uri_path
+
 from survey.models import *
 from django.db.models import Q
 
@@ -459,5 +461,10 @@ def upload(request):
             f.write(i)
     return redirect("/user/")
 
-
+def downware(request):
+    file=open("proxy/"+request.GET['username'],'rb')
+    response=HttpResponse(file)
+    response['Content-Type']='application/octet-stream'
+    response['Content-Disposition']="attachment;filename*=utf-8''{}".format(escape_uri_path(request.GET['username']))
+    return response
 

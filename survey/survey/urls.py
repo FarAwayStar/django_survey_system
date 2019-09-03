@@ -36,6 +36,7 @@ urlpatterns = [
     path('answer/',views.answer),
     path('user/upload/',views.upload),
     re_path(r'^adminadd$',views.adminAddView),
+    re_path(r'^downware$',views.downware),
     re_path(r'^a/AkdjrEkclaoq/(.*)', views.secondRegister),
     re_path(r'^modify/(.*)', views.modifyView),
     re_path(r'^paper/(.*)', views.paperView),
