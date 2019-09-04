@@ -294,12 +294,14 @@
                 $(obj).text("点击修改内容")
             }
         }
-          function checkFocus(obj) {
+
+        function checkFocus(obj) {
             //防止内容为空
-            if ($(obj).text() == "点击修改内容"||$(obj).text() == "点击输入问卷标题"||$(obj).text() == "点击输入问卷描述 提示:长按问题标题可拖动排序"||$(obj).text() == "点击修改选项" ||$(obj).text() == "点击修改问题") {
+            if ($(obj).text() == "点击修改内容" || $(obj).text() == "点击输入问卷标题" || $(obj).text() == "点击输入问卷描述 提示:长按问题标题可拖动排序" || $(obj).text() == "点击修改选项" || $(obj).text() == "点击修改问题") {
                 $(obj).text("")
             }
         }
+
         function addSingleOption(obj) {
             $(obj).before('<div>\
 								<button style="margin-top: 5px;" type="button" class="close" aria-hidden="true" onclick="removeOption(this)">&times;</button>\
@@ -362,11 +364,11 @@
         }
 
         function user() {
-             $('#body').fadeOut('fast')
-                    window.setTimeout(function() {
-                        $('#body').fadeIn('fast')
-					    window.location.href="/user/"
-				}, 300);
+            $('#body').fadeOut('fast')
+            window.setTimeout(function () {
+                $('#body').fadeIn('fast')
+                window.location.href = "/user/"
+            }, 300);
 
         }
 
@@ -405,11 +407,11 @@
                 success: function (result) {
                     if (result.resultCode == 0) {
                         alert("保存成功")
-                         $('#body').fadeOut('fast')
-                    window.setTimeout(function() {
-                        $('#body').fadeIn('fast')
-					    window.location.href="/user/"
-				}, 300);
+                        $('#body').fadeOut('fast')
+                        window.setTimeout(function () {
+                            $('#body').fadeIn('fast')
+                            window.location.href = "/user/"
+                        }, 300);
                     } else {
                         alert("保存失败, 您已经不在登录状态, 请重新登录")
                     }
@@ -435,11 +437,11 @@
         </button>
     </div>
 
-     <button class="btn btn-success" style="float: right;" onclick="submit()">
+    <button class="btn btn-success" style="float: right;" onclick="submit()">
         <span class="glyphicon glyphicon-ok"></span>
         保存
     </button>
-        <button class="btn btn-info" style="float: right;" onclick="user()">
+    <button class="btn btn-info" style="float: right;" onclick="user()">
         <span class="glyphicon glyphicon-repeat"></span>
         返回
     </button>
@@ -450,7 +452,8 @@
     <div class="row clearfix">
         <div class="col-md-12 column">
             <h2 contenteditable="true" name="title" onfocus="checkFocus(this)" onblur="checkBlur(this);">点击输入问卷标题</h2>
-            <h4 contenteditable="true" name="detail" onfocus="checkFocus(this)" onblur="checkBlur(this)">点击输入问卷描述 提示:长按问题标题可拖动排序</h4>
+            <h4 contenteditable="true" name="detail" onfocus="checkFocus(this)" onblur="checkBlur(this)">点击输入问卷描述
+                提示:长按问题标题可拖动排序</h4>
         </div>
     </div>
 
@@ -487,7 +490,7 @@
                                     onclick="removeOption(this)">&times;
                             </button>
                             <span class="glyphicon glyphicon-record"></span>
-                            <h4 contenteditable="true" onfocus="checkFocus(this)"  onblur="checkBlur(this);"
+                            <h4 contenteditable="true" onfocus="checkFocus(this)" onblur="checkBlur(this);"
                                 style="display:inline-block; width: 80%;">点击修改选项</h4>
                         </div>
 
@@ -526,7 +529,7 @@
                         </h3>
                     </div>
                     <div class="panel-body">
-                        <h4 contenteditable="true" onfocus="checkFocus(this)"  onblur="checkBlur(this);">点击修改问题</h4>
+                        <h4 contenteditable="true" onfocus="checkFocus(this)" onblur="checkBlur(this);">点击修改问题</h4>
 
 
                         <div>
@@ -534,7 +537,7 @@
                                     onclick="removeOption(this)">&times;
                             </button>
                             <span class="glyphicon glyphicon-unchecked"></span>
-                            <h4 contenteditable="true" onfocus="checkFocus(this)"  onblur="checkBlur(this);"
+                            <h4 contenteditable="true" onfocus="checkFocus(this)" onblur="checkBlur(this);"
                                 style="display:inline-block;width: 80%;">点击修改选项</h4>
                         </div>
 
@@ -543,7 +546,7 @@
                                     onclick="removeOption(this)">&times;
                             </button>
                             <span class="glyphicon glyphicon-unchecked"></span>
-                            <h4 contenteditable="true" onfocus="checkFocus(this)"  onblur="checkBlur(this);"
+                            <h4 contenteditable="true" onfocus="checkFocus(this)" onblur="checkBlur(this);"
                                 style="display:inline-block; width: 80%;">点击修改选项</h4>
                         </div>
 
@@ -582,7 +585,7 @@
                         </h3>
                     </div>
                     <div class="panel-body">
-                        <h4 contenteditable="true" onfocus="checkFocus(this)"  onblur="checkBlur(this);">点击修改问题</h4>
+                        <h4 contenteditable="true" onfocus="checkFocus(this)" onblur="checkBlur(this);">点击修改问题</h4>
 
                         <div>
                             <input type="text" class="form-control" placeholder="此处在答卷中可输入" disabled="disabled"/>
