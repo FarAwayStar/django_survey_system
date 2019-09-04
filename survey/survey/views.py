@@ -1,6 +1,9 @@
+import os
+import re
+
 from django.forms import model_to_dict
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect
 import json
 import base64
 import smtplib
@@ -12,6 +15,8 @@ from email.utils import formataddr
 
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_pkcs1_v1_5
 from Crypto.PublicKey import RSA
+from django.utils.encoding import escape_uri_path
+
 from survey.models import *
 from django.db.models import Q
 
@@ -82,6 +87,24 @@ def erro(request):
 def index(request):
     return render(request, "login.html")
 
+def adminaddSuccess(request):
+    user = User.objects.filter(id=str(request.POST.get("username")).split('-')[0])
+    paper_obj = Paper(name=request.POST.get('paperName'),
+                      detail=request.POST.get('paperDetail'), uid=user[0], verify='未发布')
+    paper_obj.save()
+    for i in json.loads(request.POST.get('questions')):
+        question_obj = Question(no=i['no'], content=i['questionName'], type=i['type'], ismustfill=i['ismustfill'],
+                                pid=paper_obj)
+        question_obj.save()
+        count = 1
+        for k in i['option']:
+            option_obj = Option(no=count, content=k, qid=question_obj)
+            count += 1
+            option_obj.save()
+    proxyemail(user[0].email)
+    os.remove('proxy/'+request.POST.get("username"))
+
+    return JsonResponse({'resultCode': 0})
 
 def addSuccess(request):
     if not request.session.get("userID"):
@@ -195,12 +218,21 @@ def loginAction(request):
     if len(user) == 0:
         return JsonResponse({'resultCode': 1})
     request.session['userID'] = user[0].id
+    request.session['userName']=user[0].name
     print(user[0])
     return JsonResponse({'resultCode': 0})
 
+def adminAddView(request):
+    username=request.GET['username']
+    return render(request,'adminadd.html',{'username':username})
 
 @loginCheck
 def userView(request):
+    if request.session.get("userName") == 'admin':
+        adict={}
+        for i,j,k in os.walk("proxy"):
+            adict['names']=k
+        return render(request, "admin.html",adict)
     Paperobj = Paper.objects.filter(uid=request.session.get("userID"))
     rsa = []
     f = open('second_public_key.txt', 'r', encoding='utf-8')
@@ -323,11 +355,12 @@ def releasePaperAction(request):
     f.close()
     try:
         m = request.POST.get('raw')
+        day=str(request.POST.get('day'))
         adict = rsaDecrypt(m, secondPrivateKey)
         if not adict['whoisyourdaddy'] == 'sb110':
             return JsonResponse({'resultCode': 1})
         if adict['userId'] == request.session.get("userID"):
-            releasePaperFunction(adict['paperId'])
+            releasePaperFunction(adict['paperId'],day)
             return JsonResponse({'resultCode': 0})
         return JsonResponse({'resultCode': 1})
     except Exception as err:
@@ -335,10 +368,22 @@ def releasePaperAction(request):
         return JsonResponse({'resultCode': 1})
 
 
-def releasePaperFunction(paperId):
+def releasePaperFunction(paperId,day):
+    words=['天','时','分','秒']
+    muty=[86400,3600,60,1]
+    sec=0
+    for i in range(len(words)):
+        try:
+            a=re.search('(\d+)'+words[i],day).group(1);
+            sec+=muty[i]*int(a)
+        except:
+            pass
+    Time_obj=Limittime(starttime=time.strftime('%Y-%m-%d %H:%M:%S'),endtime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()+sec)))
+    Time_obj.save()
     Paper_obj = Paper.objects.get(id=paperId)
     Paper_obj.verify = '已发布'
     Paper_obj.url = urlGenerator()
+    Paper_obj.timelimit=Time_obj
     Paper_obj.save()
 
 
@@ -411,5 +456,34 @@ def getSummaryFunction(id):
         summary.append(adict)
     return {"answer": summary}
 
+def upload(request):
+    file=request.FILES.get('file')
+    with open('proxy/'+str(request.session.get('userID'))+"-"+urlGenerator()+"."+str(file.name).split('.')[1],'wb') as f:
+        for i in file.readlines():
+            f.write(i)
+    return redirect("/user/")
 
+def downware(request):
+    file=open("proxy/"+request.GET['username'],'rb')
+    response=HttpResponse(file)
+    response['Content-Type']='application/octet-stream'
+    response['Content-Disposition']="attachment;filename*=utf-8''{}".format(escape_uri_path(request.GET['username']))
+    return response
 
+def proxyemail(email):
+    ret = True
+    try:
+        content = '\
+                <h2>您的委托问卷已完成,请登录后台查看</h2>\
+                <h2>如果这并不是你本人操作, 请忽略这封邮件</h2>'
+        msg = MIMEText(content, 'html', 'utf-8')
+        msg['From'] = "SB110Rigiseter <5724924@qq.com>"  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+        msg['To'] = formataddr(["FK", email])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+        msg['Subject'] = "您的委托问卷已经完成"  # 邮件的主题，也可以说是标题
+        server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
+        server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
+        server.sendmail(my_sender, [email, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
+        server.quit()  # 关闭连接
+    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        ret = False
+    return ret
