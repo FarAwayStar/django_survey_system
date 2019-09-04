@@ -28,24 +28,29 @@ import traceback
 my_sender = '5724924@qq.com'  # 发件人邮箱账号
 my_pass = 'rtccbnjnydebbigg'  # 发件人邮箱密码
 
-exitFlag=0
-class checkSensitiveThread (threading.Thread):
+exitFlag = 0
+
+
+class checkSensitiveThread(threading.Thread):
     def __init__(self, paper_obj):
         threading.Thread.__init__(self)
-        self.paper_obj=paper_obj
+        self.paper_obj = paper_obj
+
     def run(self):
-        print ("开始线程")
+        print("开始线程")
         checkSensitiveAI(self.paper_obj)
-        print ("退出线程")
+        print("退出线程")
+
 
 def checkSensitiveAI(paper_obj):
     time.sleep(3)
-    message=checkSensitiveFunction(paper_obj)
+    message = checkSensitiveFunction(paper_obj)
     if message is True:
-        paper_obj.verify='未发布'
+        paper_obj.verify = '未发布'
     else:
-        paper_obj.verify = '审核未通过,原因:'+message[0]+",识别到:"+message[1]
+        paper_obj.verify = '审核未通过,原因:' + message[0] + ",识别到:" + message[1]
     paper_obj.save()
+
 
 def checkSensitiveFunction(paper_obj):
     a = getModifyQuestion({'paperId': paper_obj.id})
@@ -61,8 +66,9 @@ def checkSensitiveFunction(paper_obj):
     for i in range(sheet.max_row):
         for k in check:
             if str(sheet.cell(i + 1, 4).value) in str(k):
-                return [str(sheet.cell(i + 1, 2).value),str(sheet.cell(i + 1, 4).value)]
+                return [str(sheet.cell(i + 1, 2).value), str(sheet.cell(i + 1, 4).value)]
     return True
+
 
 def loginCheck(func):
     def wrapper(request, *args, **kwargs):
@@ -87,6 +93,7 @@ def erro(request):
 def index(request):
     return render(request, "login.html")
 
+
 def adminaddSuccess(request):
     user = User.objects.filter(id=str(request.POST.get("username")).split('-')[0])
     paper_obj = Paper(name=request.POST.get('paperName'),
@@ -102,9 +109,10 @@ def adminaddSuccess(request):
             count += 1
             option_obj.save()
     proxyemail(user[0].email)
-    os.remove('proxy/'+request.POST.get("username"))
+    os.remove('proxy/' + request.POST.get("username"))
 
     return JsonResponse({'resultCode': 0})
+
 
 def addSuccess(request):
     if not request.session.get("userID"):
@@ -218,21 +226,23 @@ def loginAction(request):
     if len(user) == 0:
         return JsonResponse({'resultCode': 1})
     request.session['userID'] = user[0].id
-    request.session['userName']=user[0].name
+    request.session['userName'] = user[0].name
     print(user[0])
     return JsonResponse({'resultCode': 0})
 
+
 def adminAddView(request):
-    username=request.GET['username']
-    return render(request,'adminadd.html',{'username':username})
+    username = request.GET['username']
+    return render(request, 'adminadd.html', {'username': username})
+
 
 @loginCheck
 def userView(request):
     if request.session.get("userName") == 'admin':
-        adict={}
-        for i,j,k in os.walk("proxy"):
-            adict['names']=k
-        return render(request, "admin.html",adict)
+        adict = {}
+        for i, j, k in os.walk("proxy"):
+            adict['names'] = k
+        return render(request, "admin.html", adict)
     Paperobj = Paper.objects.filter(uid=request.session.get("userID"))
     rsa = []
     f = open('second_public_key.txt', 'r', encoding='utf-8')
@@ -315,6 +325,7 @@ def deleteAction(request):
         print(err)
         JsonResponse({'resultCode': 1})
 
+
 def stopAction(request):
     f = open('second_private_key.txt', 'r', encoding='utf-8')
     secondPrivateKey = f.read()
@@ -337,11 +348,11 @@ def deleteFunction(paperId):
     Paper_obj = Paper.objects.get(id=paperId)
     Paper_obj.delete()
 
+
 def stopFunction(paperId):
     Paper_obj = Paper.objects.get(id=paperId)
-    Paper_obj.verify='已停止'
+    Paper_obj.verify = '已停止'
     Paper_obj.save()
-
 
 
 def saveModifyAction(request):
@@ -355,12 +366,12 @@ def releasePaperAction(request):
     f.close()
     try:
         m = request.POST.get('raw')
-        day=str(request.POST.get('day'))
+        day = str(request.POST.get('day'))
         adict = rsaDecrypt(m, secondPrivateKey)
         if not adict['whoisyourdaddy'] == 'sb110':
             return JsonResponse({'resultCode': 1})
         if adict['userId'] == request.session.get("userID"):
-            releasePaperFunction(adict['paperId'],day)
+            releasePaperFunction(adict['paperId'], day)
             return JsonResponse({'resultCode': 0})
         return JsonResponse({'resultCode': 1})
     except Exception as err:
@@ -368,22 +379,23 @@ def releasePaperAction(request):
         return JsonResponse({'resultCode': 1})
 
 
-def releasePaperFunction(paperId,day):
-    words=['天','时','分','秒']
-    muty=[86400,3600,60,1]
-    sec=0
+def releasePaperFunction(paperId, day):
+    words = ['天', '时', '分', '秒']
+    muty = [86400, 3600, 60, 1]
+    sec = 0
     for i in range(len(words)):
         try:
-            a=re.search('(\d+)'+words[i],day).group(1);
-            sec+=muty[i]*int(a)
+            a = re.search('(\d+)' + words[i], day).group(1);
+            sec += muty[i] * int(a)
         except:
             pass
-    Time_obj=Limittime(starttime=time.strftime('%Y-%m-%d %H:%M:%S'),endtime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()+sec)))
+    Time_obj = Limittime(starttime=time.strftime('%Y-%m-%d %H:%M:%S'),
+                         endtime=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + sec)))
     Time_obj.save()
     Paper_obj = Paper.objects.get(id=paperId)
     Paper_obj.verify = '已发布'
     Paper_obj.url = urlGenerator()
-    Paper_obj.timelimit=Time_obj
+    Paper_obj.timelimit = Time_obj
     Paper_obj.save()
 
 
@@ -393,25 +405,38 @@ def urlGenerator(size=8, chars=string.ascii_letters + string.digits):
 
 def paperView(request, m):
     try:
-        paper_obj = Paper.objects.get(url=m,verify='已发布')
+        paper_obj = Paper.objects.get(url=m, verify='已发布')
     except:
         return render(request, "404.html")
     return render(request, "paper.html", getModifyQuestion({"paperId": paper_obj.id}))
 
 
 def answer(request):
-    try:
-        paper_obj = Paper.objects.get(id=request.POST.get('paperId'))
-        questions_obj = Question.objects.filter(pid=paper_obj)
-        questions_obj
-        for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
-            for k in i:
-                answer_obj = Answer(content=k, qid=j, pid=paper_obj)
-                answer_obj.save()
-    except:
-        return JsonResponse({'resultCode': 1})
+    # print(request.POST.get('userIp'))
+        try:
+            paper_obj = Paper.objects.get(id=request.POST.get('paperId'))
+            questions_obj = Question.objects.filter(pid=paper_obj.id)
+            try:
+                print(paper_obj.id)
+                lenth = len(Answer.objects.filter(identify=request.POST.get('userIp'), pid=paper_obj.id))
+                print(lenth)
+                if lenth != 0:
+                    return JsonResponse({'resultCode': 1})
+                for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
+                    for k in i:
+                        answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
+                        answer_obj.save()
+            except Exception as ee:
+                print(ee)
+                for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
+                    for k in i:
+                        answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
+                        answer_obj.save()
+        except Exception as e:
+            print(e)
+            return JsonResponse({'resultCode': 2})
 
-    return JsonResponse({'resultCode': 0})
+        return JsonResponse({'resultCode': 0})
 
 
 def anserSuccessView(request):
@@ -456,19 +481,23 @@ def getSummaryFunction(id):
         summary.append(adict)
     return {"answer": summary}
 
+
 def upload(request):
-    file=request.FILES.get('file')
-    with open('proxy/'+str(request.session.get('userID'))+"-"+urlGenerator()+"."+str(file.name).split('.')[1],'wb') as f:
+    file = request.FILES.get('file')
+    with open('proxy/' + str(request.session.get('userID')) + "-" + urlGenerator() + "." + str(file.name).split('.')[1],
+              'wb') as f:
         for i in file.readlines():
             f.write(i)
     return redirect("/user/")
 
+
 def downware(request):
-    file=open("proxy/"+request.GET['username'],'rb')
-    response=HttpResponse(file)
-    response['Content-Type']='application/octet-stream'
-    response['Content-Disposition']="attachment;filename*=utf-8''{}".format(escape_uri_path(request.GET['username']))
+    file = open("proxy/" + request.GET['username'], 'rb')
+    response = HttpResponse(file)
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = "attachment;filename*=utf-8''{}".format(escape_uri_path(request.GET['username']))
     return response
+
 
 def proxyemail(email):
     ret = True
