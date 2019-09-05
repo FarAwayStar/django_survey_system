@@ -79,10 +79,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'survey',
-        'HOST':'localhost',
+        'HOST':'47.100.167.60',
         'PORT':3306,
-        'USER':'root',
-        'PASSWORD':'rootroot'
+        'USER':'qst',
+        'PASSWORD':'123'
 
 
     }
@@ -113,13 +113,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)

@@ -271,6 +271,39 @@ var Auth = {
                 }
             });
     },
+    findAction(e){
+        e.preventDefault();
+        var name=$ (Auth.vars.login_email_input).val()
+        if (name==null||name=="")
+        {
+            $(Auth.vars.login_erro).find("label").text("用户名不能为空").css("color", "lightpink");
+            $(Auth.vars.login_erro).slideDown("normal")
+            return
+        }
+
+        $.ajax({
+                url: '/findAction/',
+                type: 'post',
+                dataType: 'json',
+                traditional: true,//这个参数必须添加，采用传统方式转换
+                data: {name: name},
+                async: false,
+                success: function (result) {
+                    if (result.resultCode == 0) {
+                        $(Auth.vars.body).fadeOut('fast')
+
+
+                    window.setTimeout(function() {
+                        $(Auth.vars.body).fadeIn('fast')
+					    window.location.href="/user/"
+				}, 300);
+                    } else {
+                        $(Auth.vars.login_erro).find("label").text("用户名/密码错误").css("color", "lightpink");
+                        $(Auth.vars.login_erro).slideDown("normal")
+                    }
+                }
+            });
+    },
     init(option) {
 
         Auth.setHeight(Auth.vars.box[0].offsetHeight + Auth.vars.lowin_footer.offsetHeight);
@@ -321,6 +354,8 @@ var Auth = {
         Auth.vars.login_btn.addEventListener("click", (e) => {
             if (Auth.vars.login_btn.innerText=='登录') {
                 Auth.loginAction(e)
+            }else{
+                Auth.findAction(e)
             }
             return false;
         });
