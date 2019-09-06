@@ -78,9 +78,10 @@
         </div>
     </div>
     <div id="change">
-        <p>
-            <button id="change_password">修改密码</button>
-        </p>
+        <button id="change_password" class="btn btn-primary">修改密码</button>
+    </div>
+    <div>
+        <button id="back" class="btn btn-primary">返回</button>
     </div>
 </div>
 </body>
@@ -137,6 +138,14 @@
             }
         });
     });
+
+    $('#back').click(function () {
+        $("#body").fadeOut("fast");
+        window.setTimeout(function () {
+            $("#body").fadeIn("fast");
+            window.location.href = "/user/"
+        }, 300);
+    })
 </script>
 
 </html>
