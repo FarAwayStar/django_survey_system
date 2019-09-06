@@ -8,6 +8,7 @@
 <body>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+<script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts-wordcloud.min.js"></script>
 <script src="https://cdn.bootcss.com/clipboard.js/1.7.1/clipboard.min.js"></script>
 <!-- 新 Bootstrap4 核心 CSS 文件 -->
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
@@ -24,14 +25,15 @@
 <div id="total"></div>
     <script>
         var chart=[];
-         var old_data = [];
-        for(var i=0;i<{{ count }};i++)
-        {
-            $("#total").append('<div id="'+i+'" style="width:1000px; height:600px;"></div>');
-            chart[i] = echarts.init(document.getElementById(i+""), 'white', {renderer: 'canvas'});
-        }
+            for(var i=0;i<{{ count }};i++)
+                {
+                    $("#total").append('<div id="'+i+'" style="width:1000px; height:600px;"></div>');
+                    chart[i] = echarts.init(document.getElementById(i+""), 'white', {renderer: 'canvas'});
+                }
         $(
+
             function () {
+
                 fetchData(chart);
                 setInterval(fetchData, 2000);
             }
@@ -46,24 +48,6 @@
                     console.log(result);
                      for(var i=0;i<{{ count }};i++)
                         chart[i].setOption(result[i].data);
-                        old_data[i] = chart[i].getOption().series[0].data;
-                }
-            });
-        }
-
-         function getDynamicData() {
-            $.ajax({
-                type: "GET",
-                url: "Update",
-                dataType: 'json',
-                success: function (result) {
-                    var options = result.data;
-                    old_data.push([options.name, options.value]);
-                    chart.setOption({
-                        series: [{
-                            data: old_data
-                        }]
-                    });
                 }
             });
         }
