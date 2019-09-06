@@ -21,8 +21,8 @@
 
 <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
 <script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
-
-<div id="total"></div>
+<button onclick="location.href='/output/{{ id }}'">下载</button>
+<div style="text-align: center"><div id="total" ></div></div>
     <script>
         var chart=[];
             for(var i=0;i<{{ count }};i++)

@@ -619,3 +619,46 @@ def proxyemail(email):
     except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
         ret = False
     return ret
+
+
+def output(request,pid):
+    adict=getSummaryFunction(pid)
+    wb=openpyxl.Workbook()
+    sheet = wb.active
+    for i in range(len(adict['answer'])):
+        sheet.cell(i+1, 1).value=adict['answer'][i]['questionName']
+        if adict['answer'][i]['type']!='自由':
+            for k in range(len(eval(adict['answer'][i]['option']))):
+                sheet.cell(i+1, 2*k+2).value = '选项'+str(eval(adict['answer'][i]['option'])[k])
+                sheet.cell(i+1, 2*k + 3).value = str(eval(adict['answer'][i]['number'])[k])+'人'
+        else:
+            count=0
+            for k in eval(adict['answer'][i]['content']):
+                count+=1
+                sheet.cell(i + 1, count+1).value=k
+    wb.save('temp/'+pid+'.xlsx')
+    file = open('temp/'+pid+'.xlsx', 'rb')
+    response = HttpResponse(file)
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = "attachment;filename*=utf-8''{}".format(escape_uri_path(pid+'.xlsx'))
+    return response
+
+
+def getInfo(request):
+    userid = request.session.get("userID")
+    user = User.objects.get(id=userid)
+    return render(request, "information.html", {"username": user.name, "email": user.email})
+
+
+def change_password(request):
+    pw_old = request.POST.get('pw_old')
+    pw_new = request.POST.get('pw_new')
+    username = request.POST.get('username')
+    print(pw_old, pw_new, username)
+    user = User.objects.get(name=username)
+    if pw_old == user.password:
+        user.password = pw_new
+        user.save()
+        return JsonResponse({'resultCode': 0})
+    else:
+        return JsonResponse({'resultCode': 2})
