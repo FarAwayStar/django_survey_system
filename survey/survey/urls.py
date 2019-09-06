@@ -35,6 +35,8 @@ urlpatterns = [
     path('releasePaper/',views.releasePaperAction),
     path('answer/',views.answer),
     path('user/upload/',views.upload),
+    path('information/',views.getInfo),  #zy
+    path('change_password/',views.change_password),  #zy
     re_path(r'^adminadd$',views.adminAddView),
     re_path(r'^downware$',views.downware),
     re_path(r'^a/AkdjrEkclaoq/(.*)', views.secondRegister),

@@ -221,7 +221,8 @@ def emailCheck(request):
 
 
 def loginAction(request):
-    user = User.objects.filter(Q(name=request.POST.get('name')) | Q(email=request.POST.get('name')),
+    user = User.objects.filter(Q(name=request.POST.get('name')) |
+                               Q(email=request.POST.get('name')),
                                password=request.POST.get('password'))
     if len(user) == 0:
         return JsonResponse({'resultCode': 1})
@@ -413,30 +414,30 @@ def paperView(request, m):
 
 def answer(request):
     # print(request.POST.get('userIp'))
+    try:
+        paper_obj = Paper.objects.get(id=request.POST.get('paperId'))
+        questions_obj = Question.objects.filter(pid=paper_obj.id)
         try:
-            paper_obj = Paper.objects.get(id=request.POST.get('paperId'))
-            questions_obj = Question.objects.filter(pid=paper_obj.id)
-            try:
-                print(paper_obj.id)
-                lenth = len(Answer.objects.filter(identify=request.POST.get('userIp'), pid=paper_obj.id))
-                print(lenth)
-                if lenth != 0:
-                    return JsonResponse({'resultCode': 1})
-                for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
-                    for k in i:
-                        answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
-                        answer_obj.save()
-            except Exception as ee:
-                print(ee)
-                for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
-                    for k in i:
-                        answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
-                        answer_obj.save()
-        except Exception as e:
-            print(e)
-            return JsonResponse({'resultCode': 2})
+            print(paper_obj.id)
+            lenth = len(Answer.objects.filter(identify=request.POST.get('userIp'), pid=paper_obj.id))
+            print(lenth)
+            if lenth != 0:
+                return JsonResponse({'resultCode': 1})
+            for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
+                for k in i:
+                    answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
+                    answer_obj.save()
+        except Exception as ee:
+            print(ee)
+            for i, j in zip(json.loads(request.POST.get('answer')), questions_obj):
+                for k in i:
+                    answer_obj = Answer(content=k, qid=j, pid=paper_obj, identify=request.POST.get('userIp'))
+                    answer_obj.save()
+    except Exception as e:
+        print(e)
+        return JsonResponse({'resultCode': 2})
 
-        return JsonResponse({'resultCode': 0})
+    return JsonResponse({'resultCode': 0})
 
 
 def anserSuccessView(request):
@@ -516,3 +517,23 @@ def proxyemail(email):
     except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
         ret = False
     return ret
+
+
+def getInfo(request):
+    userid = request.session.get("userID")
+    user = User.objects.get(id=userid)
+    return render(request, "information.html", {"username": user.name, "email": user.email})
+
+
+def change_password(request):
+    pw_old = request.POST.get('pw_old')
+    pw_new = request.POST.get('pw_new')
+    username = request.POST.get('username')
+    print(pw_old, pw_new, username)
+    user = User.objects.get(name=username)
+    if pw_old == user.password:
+        user.password = pw_new
+        user.save()
+        return JsonResponse({'resultCode': 0})
+    else:
+        return JsonResponse({'resultCode': 2})
