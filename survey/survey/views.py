@@ -448,7 +448,7 @@ def anserSuccessView(request):
 
 
 #若要用动态显示,下面的可以有用
-'''
+
 def response_as_json(data):
     json_str = json.dumps(data)
     response = HttpResponse(
@@ -460,15 +460,15 @@ def response_as_json(data):
 
 
 def json_response(data, code=200):
-    jsons=[]
+    js=[]
     for i in data:
-        data = {
+        d = {
             "code": code,
             "msg": "success",
             "data": json.loads(i),
         }
-        jsons.append(data)
-    return response_as_json(jsons)
+        js.append(d)
+    return response_as_json(js)
 
 
 def json_error(error_string="error", code=500, **kwargs):
@@ -486,21 +486,36 @@ def bar_base(id):
     answer = getSummaryFunction(id)
     jsons=[]
     for item in answer['answer']:
-        c = (
-            Bar()
-                .add_xaxis(eval(item['option']))
-                .add_yaxis("", eval(item['number']))
-                .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName'], subtitle=""))
-                .dump_options_with_quotes()
-        )
-        jsons.append(c)
+        if item['type'] == '多选' or item['type'] == '单选':
+            c = (
+                Bar()
+                    .add_xaxis(eval(item['option']))
+                    .add_yaxis("", eval(item['number']), category_gap="80%", color=Faker.rand_color())
+                    .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName'], subtitle=""),
+                                     toolbox_opts=opts.ToolboxOpts()).dump_options_with_quotes()
+            )
+            jsons.append(c)
+        else:
+            words = {}
+            for i in eval(item['content']):
+                if i not in words.keys():
+                    words[i] = 1
+                else:
+                    words[i] += 1
+            c = (
+                WordCloud()
+                    .add("", list(words.items()), word_size_range=[20, 100])
+                    .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName']),
+                                     toolbox_opts=opts.ToolboxOpts()).dump_options_with_quotes()
+            )
+            jsons.append(c)
     return jsons
 
 
 def ChartView(request,id):
     data=json_response(bar_base(id))
     return data
-'''
+
 @loginCheck
 def summaryView(request, m):
     f = open('second_private_key.txt', 'r', encoding='utf-8')
@@ -513,6 +528,7 @@ def summaryView(request, m):
             return render(request, "404.html")
         if adict['userId'] == request.session.get("userID"):
             answer = getSummaryFunction(adict['paperId'])
+            '''
             page = Page(layout=Page.SimplePageLayout)
             for item in answer['answer']:
                 if item['type'] == '多选' or item['type'] == '单选':
@@ -539,9 +555,9 @@ def summaryView(request, m):
                                              toolbox_opts=opts.ToolboxOpts())
                     )
                     page.add(c)
-
-            return HttpResponse(page.render_embed());
-            # return render(request, "summary.html",{'id':adict['paperId'],'count':len(getSummaryFunction(adict['paperId'])['answer'])})
+            '''
+            # return HttpResponse(page.render_embed());
+            return render(request, "summary.html",{'id':adict['paperId'],'count':len(getSummaryFunction(adict['paperId'])['answer'])})
         return render(request, "404.html")
     except Exception as err:
         print(err)
