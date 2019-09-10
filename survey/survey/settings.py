@@ -79,12 +79,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'survey',
-        'HOST':'47.100.167.60',
+        'HOST':'127.0.0.1',
         'PORT':3306,
-        'USER':'qst',
-        'PASSWORD':'123'
-
-
+        'USER':'root',
+        'PASSWORD':'rootroot'
     }
 }
 

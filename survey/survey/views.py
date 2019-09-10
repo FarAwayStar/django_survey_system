@@ -29,11 +29,11 @@ from pyecharts import options as opts
 from pyecharts.charts import Bar,Page,Pie,WordCloud
 from pyecharts.globals import SymbolType
 from example.commons import Faker
-my_sender = '5724924@qq.com'  # 发件人邮箱账号
+my_sender = '111111@qq.com'  # 发件人邮箱账号
 my_pass = 'rtccbnjnydebbigg'  # 发件人邮箱密码
 
 exitFlag = 0
-
+serverip='127.0.0.0'#服务器ip
 
 class checkSensitiveThread(threading.Thread):
     def __init__(self, paper_obj):
@@ -181,7 +181,7 @@ def mail(adict, url):
     try:
         content = '\
                 <h2>欢迎注册sb110问卷网, 离注册完成还有最后一步</h2>\
-                <p><a href="http://47.100.167.60/a/AkdjrEkclaoq/' + url + '">点击此处以激活账号</a></p>\
+                <p><a href="http://'+serverip+'/a/AkdjrEkclaoq/' + url + '">点击此处以激活账号</a></p>\
                 <h2>注意,此链接仅可使用一次</h2>\
                 <h2>如果这并不是你本人操作, 请忽略这封邮件</h2>'
         msg = MIMEText(content, 'html', 'utf-8')
@@ -587,6 +587,8 @@ def getSummaryFunction(id):
 
 def upload(request):
     file = request.FILES.get('file')
+    if not os.path.exists('proxy'):
+        os.mkdir('proxy')
     with open('proxy/' + str(request.session.get('userID')) + "-" + urlGenerator() + "." + str(file.name).split('.')[1],
               'wb') as f:
         for i in file.readlines():

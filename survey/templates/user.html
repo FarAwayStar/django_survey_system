@@ -181,6 +181,7 @@
 </div>
 
 <script>
+    serverip='127.0.0.1'
     function see_information(){
         $("#body").fadeOut("fast");
         window.setTimeout(function () {
@@ -276,8 +277,8 @@
     }
 
     function share(url) {
-        $("#url").val('http://47.100.167.60/paper/' + url)
-        $("#btn").attr('data-clipboard-text', 'http://47.100.167.60/paper/' + url)
+        $("#url").val('http://'+serverip+'/paper/' + url)
+        $("#btn").attr('data-clipboard-text', 'http://'+serverip+'/paper/' + url)
         $("#myModal").modal("show")
     }
 
