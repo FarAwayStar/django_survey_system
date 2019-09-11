@@ -192,7 +192,8 @@ def mail(adict, url):
         server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
         server.sendmail(my_sender, [adict['email'], ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
         server.quit()  # 关闭连接
-    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+    except Exception as err:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        print(err)
         ret = False
     return ret
 
@@ -618,7 +619,8 @@ def proxyemail(email):
         server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
         server.sendmail(my_sender, [email, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
         server.quit()  # 关闭连接
-    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+    except Exception as err:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        print(err)
         ret = False
     return ret
 
