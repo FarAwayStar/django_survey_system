@@ -29,11 +29,11 @@ from pyecharts import options as opts
 from pyecharts.charts import Bar,Page,Pie,WordCloud
 from pyecharts.globals import SymbolType
 from example.commons import Faker
-my_sender = '111111@qq.com'  # 发件人邮箱账号
+my_sender = '5724924@qq.com'  # 发件人邮箱账号
 my_pass = 'rtccbnjnydebbigg'  # 发件人邮箱密码
 
 exitFlag = 0
-serverip='127.0.0.0'#服务器ip
+serverip='47.100.167.60'#服务器ip
 
 class checkSensitiveThread(threading.Thread):
     def __init__(self, paper_obj):
