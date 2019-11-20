@@ -84,6 +84,7 @@
 </div>
 
 <script>
+    serverip='47.100.167.60'
     $("#body").fadeIn('fast')
     $(function () {
         //顶部导航栏动态样式
@@ -171,8 +172,8 @@
     }
 
     function share(url) {
-        $("#url").val('http://47.100.167.60/paper/' + url)
-        $("#btn").attr('data-clipboard-text', 'http://47.100.167.60/paper/' + url)
+        $("#url").val('http://'+serverip+'/paper/' + url)
+        $("#btn").attr('data-clipboard-text', 'http://'+serverip+'/paper/' + url)
         $("#myModal").modal("show")
     }
 

@@ -79,12 +79,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'survey',
-        'HOST':'47.100.167.60',
+        'HOST':'127.0.0.1',
         'PORT':3306,
-        'USER':'qst',
-        'PASSWORD':'123'
-
-
+        'USER':'root',
+        'PASSWORD':'rootroot'
     }
 }
 
@@ -119,6 +117,13 @@ USE_I18N = True
 
 USE_L10N = True
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'  # 邮箱服务地址 这里是163邮箱的
+EMAIL_PORT = 465  # 端口号
+EMAIL_HOST_USER = '5724924@qq.com'  # 邮箱帐号
+EMAIL_HOST_PASSWORD = 'rtccbnjnydebbigg'  # 邮箱密码
+EMAIL_FROM='sb110问卷网 <5724924@qq.com>'
+EMAIL_USE_SSL=True
 # USE_TZ = True
 
 

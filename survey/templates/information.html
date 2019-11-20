@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+
+    <!-- 新 Bootstrap4 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/jsencrypt/3.0.0-beta.1/jsencrypt.js"></script>
+    <script src="https://cdn.bootcss.com/blueimp-md5/2.11.0/js/md5.js"></script>
+</head>
+
+
+<body>
+
+<!-- 密码模态对话框 -->
+<div class="modal fade" id="change_pw_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">修改密码</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">原密码</label>
+                        <div class="col-sm-10">
+                            <input type="password" name="pw_old" class="form-control" id="pw_old_input">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">新密码</label>
+                        <div class="col-sm-10">
+                            <input type="password" name="pw_new1" class="form-control" id="pw_new_input1">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">确认密码</label>
+                        <div class="col-sm-10">
+                            <input type="password" name="pw_new2" class="form-control" id="pw_new_input2">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="pw_save_btn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="margin: 50px">
+    <div id="show_information">
+        <h4>欢迎您&nbsp;{{ username }}</h4>
+        <h4>邮箱&nbsp;&nbsp;&nbsp;&nbsp;{{ email }}</h4>
+    </div>
+    <div id="change">
+        <button id="change_password" class="btn btn-outline-primary">修改密码</button>
+        <button id="back" class="btn btn-outline-primary">返&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;回</button>
+    </div>
+</div>
+</body>
+
+<script type="text/javascript">
+
+    //修改密码
+    $("#change_password").click(function () {
+        $("#pw_old_input").val("");
+        $("#pw_new_input1").val("");
+        $("#pw_new_input2").val("");
+        //弹出模态框
+        $("#change_pw_modal").modal({
+            backdrop: "static"
+        });
+    });
+
+    $("#pw_save_btn").click(function () {
+        var pw_old = $("#pw_old_input").val();
+        var pw_new1 = $("#pw_new_input1").val();
+        var pw_new2 = $("#pw_new_input2").val();
+
+        //数据校验
+        if (pw_old.length < 6 || pw_old.length > 18) {
+            alert("原密码格式不正确");
+            return false;
+        }
+        if (pw_new1.length < 6 || pw_new1.length > 18) {
+            alert("新密码格式不正确");
+            return false;
+        }
+        if (pw_new1 !== pw_new2) {
+            alert("两次密码不一致");
+            return false;
+        }
+        $.ajax({
+            url: '/change_password/',
+            type: 'post',
+            data: {
+                username: '{{ username }}',
+                pw_old: md5(pw_old),
+                pw_new: md5(pw_new1)
+            },
+            success: function (result) {
+                if (result.resultCode === 0) {
+                    alert("保存成功");
+                    $("#pw_old_input").val('');
+                    $("#pw_new_input1").val('');
+                    $("#pw_new_input2").val('');
+                    $("#change_pw_modal").modal('hide');
+                } else {
+                    alert("保存失败")
+                }
+            }
+        });
+    });
+
+    $('#back').click(function () {
+        $("#body").fadeOut("fast");
+        window.setTimeout(function () {
+            $("#body").fadeIn("fast");
+            window.location.href = "/user/"
+        }, 300);
+    })
+</script>
+
+</html>

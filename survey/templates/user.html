@@ -54,7 +54,10 @@
             <button class="btn btn-outline-danger col-2 col-md-1" onclick="location.href='/'">
                 退出
             </button>
-            <input type="text" class="form-control col-6 col-md-9" placeholder="搜索问卷"/>
+            <input type="text" class="form-control col-6 col-md-8" placeholder="搜索问卷"/>
+            <button class="btn btn-outline-success col-2 col-md-1" onclick="see_information()">
+                个人信息
+            </button>
             <button class="btn btn-outline-success col-2 col-md-1" onclick="add()">
                 新建
             </button>
@@ -178,6 +181,15 @@
 </div>
 
 <script>
+    serverip='47.100.167.60'
+    function see_information(){
+        $("#body").fadeOut("fast");
+        window.setTimeout(function () {
+            $("#body").fadeIn("fast");
+            window.location.href = "/information/"
+        }, 300);
+    }
+
     $("#body").fadeIn('fast')
     $(function () {
         //顶部导航栏动态样式
@@ -265,8 +277,8 @@
     }
 
     function share(url) {
-        $("#url").val('http://47.100.167.60/paper/' + url)
-        $("#btn").attr('data-clipboard-text', 'http://47.100.167.60/paper/' + url)
+        $("#url").val('http://'+serverip+'/paper/' + url)
+        $("#btn").attr('data-clipboard-text', 'http://'+serverip+'/paper/' + url)
         $("#myModal").modal("show")
     }
 

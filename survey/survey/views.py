@@ -1,6 +1,6 @@
 import os
 import re
-
+import ssl
 from django.forms import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
@@ -19,17 +19,22 @@ from django.utils.encoding import escape_uri_path
 
 from survey.models import *
 from django.db.models import Q
-
+from django.conf import settings
+from django.core.mail import send_mail
 import time
 import threading
 
 import traceback
 
+from pyecharts import options as opts
+from pyecharts.charts import Bar,Page,Pie,WordCloud
+from pyecharts.globals import SymbolType
+from example.commons import Faker
 my_sender = '5724924@qq.com'  # 发件人邮箱账号
 my_pass = 'rtccbnjnydebbigg'  # 发件人邮箱密码
 
 exitFlag = 0
-
+serverip='47.100.167.60'#服务器ip
 
 class checkSensitiveThread(threading.Thread):
     def __init__(self, paper_obj):
@@ -175,20 +180,18 @@ def secondRegister(request, m):
 def mail(adict, url):
     ret = True
     try:
-        content = '\
+        message=''
+        html_message = '\
                 <h2>欢迎注册sb110问卷网, 离注册完成还有最后一步</h2>\
-                <p><a href="http://47.100.167.60/a/AkdjrEkclaoq/' + url + '">点击此处以激活账号</a></p>\
+                <p><a href="http://'+serverip+'/a/AkdjrEkclaoq/' + url + '">点击此处以激活账号</a></p>\
                 <h2>注意,此链接仅可使用一次</h2>\
                 <h2>如果这并不是你本人操作, 请忽略这封邮件</h2>'
-        msg = MIMEText(content, 'html', 'utf-8')
-        msg['From'] = "SB110Rigiseter <5724924@qq.com>"  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-        msg['To'] = formataddr(["FK", adict['email']])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
-        msg['Subject'] = "激活你的sb110账号"  # 邮件的主题，也可以说是标题
-        server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
-        server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
-        server.sendmail(my_sender, [adict['email'], ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
-        server.quit()  # 关闭连接
-    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        sender=settings.EMAIL_FROM
+        receiver=adict['email']
+        subject = "激活你的sb110账号"  # 邮件的主题，也可以说是标题
+        send_mail(subject,message,sender,[receiver],html_message=html_message)
+    except Exception as err:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        print(err)
         ret = False
     return ret
 
@@ -443,6 +446,75 @@ def anserSuccessView(request):
     return render(request, "success.html")
 
 
+#若要用动态显示,下面的可以有用
+
+def response_as_json(data):
+    json_str = json.dumps(data)
+    response = HttpResponse(
+        json_str,
+        content_type="application/json",
+    )
+    response["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+def json_response(data, code=200):
+    js=[]
+    for i in data:
+        d = {
+            "code": code,
+            "msg": "success",
+            "data": json.loads(i),
+        }
+        js.append(d)
+    return response_as_json(js)
+
+
+def json_error(error_string="error", code=500, **kwargs):
+    data = {
+        "code": code,
+        "msg": error_string,
+        "data": {}
+    }
+    data.update(kwargs)
+    return response_as_json(data)
+
+JsonError = json_error
+
+def bar_base(id):
+    answer = getSummaryFunction(id)
+    jsons=[]
+    for item in answer['answer']:
+        if item['type'] == '多选' or item['type'] == '单选':
+            c = (
+                Bar()
+                    .add_xaxis(eval(item['option']))
+                    .add_yaxis("", eval(item['number']), category_gap="80%", color=Faker.rand_color())
+                    .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName'], subtitle=""),
+                                     toolbox_opts=opts.ToolboxOpts()).dump_options_with_quotes()
+            )
+            jsons.append(c)
+        else:
+            words = {}
+            for i in eval(item['content']):
+                if i not in words.keys():
+                    words[i] = 1
+                else:
+                    words[i] += 1
+            c = (
+                WordCloud()
+                    .add("", list(words.items()), word_size_range=[20, 100])
+                    .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName']),
+                                     toolbox_opts=opts.ToolboxOpts()).dump_options_with_quotes()
+            )
+            jsons.append(c)
+    return jsons
+
+
+def ChartView(request,id):
+    data=json_response(bar_base(id))
+    return data
+
 @loginCheck
 def summaryView(request, m):
     f = open('second_private_key.txt', 'r', encoding='utf-8')
@@ -450,15 +522,45 @@ def summaryView(request, m):
     f.close()
     try:
         adict = rsaDecrypt(m, secondPrivateKey)
+
         if not adict['whoisyourdaddy'] == 'sb113':
             return render(request, "404.html")
         if adict['userId'] == request.session.get("userID"):
-            return render(request, "summary.html", getSummaryFunction(adict['paperId']))
+            answer = getSummaryFunction(adict['paperId'])
+            '''
+            page = Page(layout=Page.SimplePageLayout)
+            for item in answer['answer']:
+                if item['type'] == '多选' or item['type'] == '单选':
+                    c = (
+                        Bar()
+                            .add_xaxis(eval(item['option']))
+                            .add_yaxis("", eval(item['number']),category_gap="80%",color=Faker.rand_color())
+                            .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName'], subtitle=""),
+                                             toolbox_opts=opts.ToolboxOpts())
+                    )
+                    page.add(c)
+                else:
+                    words={}
+                    for i in eval(item['content']):
+                        if i not in words.keys():
+                            words[i]=1
+                        else:
+                            words[i]+=1
+
+                    c = (
+                        WordCloud()
+                            .add("", list(words.items()), word_size_range=[20, 100])
+                            .set_global_opts(title_opts=opts.TitleOpts(title=item['questionName']),
+                                             toolbox_opts=opts.ToolboxOpts())
+                    )
+                    page.add(c)
+            '''
+            # return HttpResponse(page.render_embed());
+            return render(request, "summary.html",{'id':adict['paperId'],'count':len(getSummaryFunction(adict['paperId'])['answer'])})
         return render(request, "404.html")
     except Exception as err:
         print(err)
         return render(request, "404.html")
-
 
 def getSummaryFunction(id):
     summary = []
@@ -484,6 +586,8 @@ def getSummaryFunction(id):
 
 def upload(request):
     file = request.FILES.get('file')
+    if not os.path.exists('proxy'):
+        os.mkdir('proxy')
     with open('proxy/' + str(request.session.get('userID')) + "-" + urlGenerator() + "." + str(file.name).split('.')[1],
               'wb') as f:
         for i in file.readlines():
@@ -502,17 +606,58 @@ def downware(request):
 def proxyemail(email):
     ret = True
     try:
-        content = '\
+        message = ''
+        html_message = '\
                 <h2>您的委托问卷已完成,请登录后台查看</h2>\
                 <h2>如果这并不是你本人操作, 请忽略这封邮件</h2>'
-        msg = MIMEText(content, 'html', 'utf-8')
-        msg['From'] = "SB110Rigiseter <5724924@qq.com>"  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-        msg['To'] = formataddr(["FK", email])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
-        msg['Subject'] = "您的委托问卷已经完成"  # 邮件的主题，也可以说是标题
-        server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
-        server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
-        server.sendmail(my_sender, [email, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
-        server.quit()  # 关闭连接
-    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        sender = settings.EMAIL_FROM
+        receiver = email
+        subject = "委托已完成"  # 邮件的主题，也可以说是标题
+        send_mail(subject, message, sender, [receiver], html_message=html_message)
+    except Exception as err:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        print(err)
         ret = False
     return ret
+
+
+def output(request,pid):
+    adict=getSummaryFunction(pid)
+    wb=openpyxl.Workbook()
+    sheet = wb.active
+    for i in range(len(adict['answer'])):
+        sheet.cell(i+1, 1).value=adict['answer'][i]['questionName']
+        if adict['answer'][i]['type']!='自由':
+            for k in range(len(eval(adict['answer'][i]['option']))):
+                sheet.cell(i+1, 2*k+2).value = '选项'+str(eval(adict['answer'][i]['option'])[k])
+                sheet.cell(i+1, 2*k + 3).value = str(eval(adict['answer'][i]['number'])[k])+'人'
+        else:
+            count=0
+            for k in eval(adict['answer'][i]['content']):
+                count+=1
+                sheet.cell(i + 1, count+1).value=k
+    wb.save('temp/'+pid+'.xlsx')
+    file = open('temp/'+pid+'.xlsx', 'rb')
+    response = HttpResponse(file)
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = "attachment;filename*=utf-8''{}".format(escape_uri_path(pid+'.xlsx'))
+    return response
+
+
+def getInfo(request):
+    userid = request.session.get("userID")
+    user = User.objects.get(id=userid)
+    return render(request, "information.html", {"username": user.name, "email": user.email})
+
+
+def change_password(request):
+    pw_old = request.POST.get('pw_old')
+    pw_new = request.POST.get('pw_new')
+    username = request.POST.get('username')
+    print(pw_old, pw_new, username)
+    user = User.objects.get(name=username)
+    if pw_old == user.password:
+        user.password = pw_new
+        user.save()
+        return JsonResponse({'resultCode': 0})
+    else:
+        return JsonResponse({'resultCode': 2})
